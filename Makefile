@@ -1,5 +1,5 @@
 PROJECT_NAME := "GO_ECHO"
-VERSION := "0.1.0"
+VERSION := "0.2.0"
 PKG := "."
 PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
 GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v _test.go)

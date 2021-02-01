@@ -12,6 +12,7 @@ import (
 
 	"github.com/Daniel-Seifert/go-echo/internal/util"
 	"github.com/gorilla/mux"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	log "github.com/sirupsen/logrus"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -43,6 +44,7 @@ func main() {
 	// Configure server
 	router := mux.NewRouter()
 	router.PathPrefix("/").Methods("POST").HandlerFunc(echo)
+	router.Handle("/metrics", promhttp.Handler())
 	server := &http.Server{
 		Handler:      router,
 		Addr:         fmt.Sprintf("%s:%d", address.String(), *port),
@@ -52,7 +54,7 @@ func main() {
 
 	// Start Server
 	go func() {
-		log.Infof("Starting go-echo v0.1.0 server at: http://%s:%d", address.String(), *port)
+		log.Infof("Starting go-echo v0.2.0 server at: http://%s:%d", address.String(), *port)
 		if err := server.ListenAndServe(); err != nil {
 			log.Warn(err)
 		}
