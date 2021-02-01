@@ -1,5 +1,7 @@
 # build stage
-FROM golang as builder
+FROM --platform=$BUILDPLATFORM golang as builder
+ARG TARGETARCH
+ENV GOARCH=$TARGETARCH
 # Add dependencies
 WORKDIR /go/src/app
 ADD . /go/src/app

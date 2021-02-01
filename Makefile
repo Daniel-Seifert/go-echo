@@ -1,4 +1,5 @@
 PROJECT_NAME := "GO_ECHO"
+VERSION := "0.1.0"
 PKG := "."
 PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
 GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v _test.go)
@@ -18,6 +19,12 @@ vet: ## Run go vet
 
 test: ## Run unittests
 	@go test -short ${PKG_LIST}
+
+docker: ## Run unittests
+	@docker buildx build \
+	--push -t dseifert/go-echo:${VERSION} \
+	--platform=linux/amd64,linux/arm64,linux/ppc64le,linux/s390x,linux/arm/v7 \
+	 .
 
 test-coverage: ## Run tests with coverage
 	@go test -short -coverprofile cover.out -covermode=atomic ${PKG_LIST} 
