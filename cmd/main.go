@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -25,6 +26,9 @@ var (
 	logFormat = app.Flag("log-format", "Log-Format for Kelon. Must be one of [TEXT, JSON]").Default("TEXT").Envar("LOG_FORMAT").Enum("TEXT", "JSON")
 	port      = app.Flag("port", "Specify port go-echo listens on.").Default("8888").Envar("PORT").Uint16()
 	address   = app.Flag("address", "Specify address go-echo listens on.").Default("0.0.0.0").Envar("ADDRESS").IP()
+
+	// Global variables
+	startTime time.Time
 )
 
 func main() {
@@ -43,7 +47,8 @@ func main() {
 
 	// Configure server
 	router := mux.NewRouter()
-	router.PathPrefix("/").Methods("POST").HandlerFunc(echo)
+	router.PathPrefix("/").Methods(http.MethodPost).HandlerFunc(echo)
+	router.PathPrefix("/health").Methods(http.MethodGet).HandlerFunc(health)
 	router.Handle("/metrics", promhttp.Handler())
 	server := &http.Server{
 		Handler:      router,
@@ -53,8 +58,9 @@ func main() {
 	}
 
 	// Start Server
+	startTime = time.Now()
 	go func() {
-		log.Infof("Starting go-echo v0.2.0 server at: http://%s:%d", address.String(), *port)
+		log.Infof("Starting go-echo v0.3.0 server at: http://%s:%d", address.String(), *port)
 		if err := server.ListenAndServe(); err != nil {
 			log.Warn(err)
 		}
@@ -101,4 +107,27 @@ func echo(writer http.ResponseWriter, request *http.Request) {
 	var buffer bytes.Buffer
 	_ = request.Write(&buffer)
 	_, _ = writer.Write(buffer.Bytes())
+}
+
+func health(writer http.ResponseWriter, request *http.Request) {
+	// Build response with uptime
+	response := struct {
+		Uptime string `json:"uptime"`
+	}{
+		Uptime: time.Since(startTime).String(),
+	}
+	responseBytes, err := json.Marshal(response)
+
+	// Return internal server error if serialization failed
+	if err != nil {
+		writer.WriteHeader(http.StatusInternalServerError)
+		msg := fmt.Sprintf("Error while serializing health msg: %s", err.Error())
+		_, _ = writer.Write([]byte(msg))
+		log.Error(msg)
+		return
+	}
+
+	// Return uptime as successful response
+	writer.WriteHeader(http.StatusOK)
+	_, _ = writer.Write(responseBytes)
 }
