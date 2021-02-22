@@ -23,7 +23,7 @@ var (
 	app = kingpin.New("go-echo", "Simple go echo service")
 
 	// Logging
-	logFormat = app.Flag("log-format", "Log-Format for Kelon. Must be one of [TEXT, JSON]").Default("TEXT").Envar("LOG_FORMAT").Enum("TEXT", "JSON")
+	logFormat = app.Flag("log-format", "Log-Format for go-echo. Must be one of [TEXT, JSON]").Default("TEXT").Envar("LOG_FORMAT").Enum("TEXT", "JSON")
 	port      = app.Flag("port", "Specify port go-echo listens on.").Default("8888").Envar("PORT").Uint16()
 	address   = app.Flag("address", "Specify address go-echo listens on.").Default("0.0.0.0").Envar("ADDRESS").IP()
 
@@ -68,11 +68,11 @@ func main() {
 
 	// Await termination
 	blockTillInterrupt(os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
-	gracefullShutdown(server, 10*time.Second)
+	gracefulShutdown(server, 10*time.Second)
 	log.Info("Good bye!")
 }
 
-func gracefullShutdown(server *http.Server, timeout time.Duration) {
+func gracefulShutdown(server *http.Server, timeout time.Duration) {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	onShutdown := make(chan struct{})
 	defer cancel()

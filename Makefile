@@ -1,9 +1,11 @@
-PROJECT_NAME := "GO_ECHO"
-VERSION := "0.2.0"
+PROJECT_NAME := "go-echo"
+VERSION := "0.3.0"
 PKG := "."
 PKG_LIST := $(shell go list ${PKG}/... | grep -v /vendor/)
 GO_FILES := $(shell find . -name '*.go' | grep -v /vendor/ | grep -v _test.go)
- 
+PLATFORMS=linux
+ARCHITECTURES=amd64 arm arm64
+
 .PHONY: all dep lint vet test test-coverage build clean
  
 all: build
@@ -30,8 +32,9 @@ test-coverage: ## Run tests with coverage
 	@go test -short -coverprofile cover.out -covermode=atomic ${PKG_LIST} 
 	# @cat cover.out >> coverage.txt
 
-build: dep ## Build the binary file
-	@go build -i -o out/go-echo $(PKG)/cmd/main
+build: ## build binaries
+	$(foreach GOOS, $(PLATFORMS),\
+	$(foreach GOARCH, $(ARCHITECTURES), $(shell export GOOS=$(GOOS); export GOARCH=$(GOARCH); go build -v -o ./out/$(PROJECT_NAME)-$(GOOS)-$(GOARCH) ./cmd)))
  
 clean: ## Remove previous build
 	@rm -f $(PROJECT_NAME)/build
